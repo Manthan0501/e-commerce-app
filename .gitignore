@@ -91,5 +91,5 @@ terraform.tfstate
 terraform.tfstate.backup
 terraform/terraform.tfstate
 terraform/terraform.tfstate.backup
-terra-key.pub
-terra-key
+easy-shop-key.pub
+easy-shop-key

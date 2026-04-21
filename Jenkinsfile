@@ -1,18 +1,28 @@
-@Library('Shared') _
+@Library('shared library') _
 
 pipeline {
     agent any
     
     environment {
         // Update the main app image name to match the deployment file
-        DOCKER_IMAGE_NAME = 'trainwithshubham/easyshop-app'
-        DOCKER_MIGRATION_IMAGE_NAME = 'trainwithshubham/easyshop-migration'
+        DOCKER_IMAGE_NAME = 'manthan0501/easyshop-app'
+        DOCKER_MIGRATION_IMAGE_NAME = 'manthan0501/easyshop-migration'
         DOCKER_IMAGE_TAG = "${BUILD_NUMBER}"
-        GITHUB_CREDENTIALS = credentials('github-credentials')
-        GIT_BRANCH = "master"
+        GITHUB_CREDENTIALS = credentials('github_creds')
+        GIT_BRANCH = "dev"
+        GIT_REPO = "https://github.com/Manthan0501/e-commerce-app.git"
+    }
+    
+    options {
+        buildDiscarder(logRotator(
+            numToKeepStr: '5',        // keep last 5 builds
+            daysToKeepStr: '7',       // OR keep builds for 7 days
+            artifactNumToKeepStr: '3' // keep only 3 artifacts
+        ))
     }
     
     stages {
+       
         stage('Cleanup Workspace') {
             steps {
                 script {
@@ -24,10 +34,11 @@ pipeline {
         stage('Clone Repository') {
             steps {
                 script {
-                    clone("https://github.com/LondheShubham153/tws-e-commerce-app.git","master")
+                    clone(env.GIT_REPO,env.GIT_BRANCH)
                 }
             }
         }
+        
         
         stage('Build Docker Images') {
             parallel {
@@ -59,11 +70,10 @@ pipeline {
             }
         }
         
-        stage('Run Unit Tests') {
+        stage('Run Unit Test') {
             steps {
-                script {
-                    run_tests()
-                }
+                sh 'npm ci'
+                sh 'npm run lint'
             }
         }
         
@@ -86,7 +96,7 @@ pipeline {
                             docker_push(
                                 imageName: env.DOCKER_IMAGE_NAME,
                                 imageTag: env.DOCKER_IMAGE_TAG,
-                                credentials: 'docker-hub-credentials'
+                                credentials: 'docker_hub'
                             )
                         }
                     }
@@ -98,13 +108,27 @@ pipeline {
                             docker_push(
                                 imageName: env.DOCKER_MIGRATION_IMAGE_NAME,
                                 imageTag: env.DOCKER_IMAGE_TAG,
-                                credentials: 'docker-hub-credentials'
+                                credentials: 'docker_hub'
                             )
                         }
                     }
                 }
             }
         }
+        
+        stage('Cleanup Docker') {
+    steps {
+        sh '''
+        # Keep latest images, delete rest
+        docker images manthan0501/easyshop-app --format "{{.ID}}" | tail -n +2 | xargs -r docker rmi -f
+
+        docker images manthan0501/easyshop-migration --format "{{.ID}}" | tail -n +2 | xargs -r docker rmi -f
+
+        # Clean dangling images (important)
+        docker image prune -f
+        '''
+    }
+}
         
         // Add this new stage
         stage('Update Kubernetes Manifests') {
@@ -113,9 +137,9 @@ pipeline {
                     update_k8s_manifests(
                         imageTag: env.DOCKER_IMAGE_TAG,
                         manifestsPath: 'kubernetes',
-                        gitCredentials: 'github-credentials',
+                        gitCredentials: 'github_creds',
                         gitUserName: 'Jenkins CI',
-                        gitUserEmail: 'shubhamnath5@gmail.com'
+                        gitUserEmail: 'manthantiwari2697@gmail.com'
                     )
                 }
             }
