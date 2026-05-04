@@ -8,7 +8,7 @@ pipeline {
         DOCKER_IMAGE_NAME = 'manthan0501/easyshop-app'
         DOCKER_MIGRATION_IMAGE_NAME = 'manthan0501/easyshop-migration'
         DOCKER_IMAGE_TAG = "${BUILD_NUMBER}"
-        GITHUB_CREDENTIALS = credentials('github_creds')
+        GITHUB_CREDENTIALS = credentials('git_creds')
         GIT_BRANCH = "dev"
         GIT_REPO = "https://github.com/Manthan0501/e-commerce-app.git"
     }
