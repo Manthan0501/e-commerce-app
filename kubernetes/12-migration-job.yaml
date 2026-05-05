@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: migration
-        image: manthan0501/easyshop-migration:2
+        image: manthan0501/easyshop-migration:6
         imagePullPolicy: Always
         env:
         - name: MONGODB_URI
