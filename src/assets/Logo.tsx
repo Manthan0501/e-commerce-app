@@ -11,7 +11,7 @@ const Logo = () => {
       </span>
       <div>
         <p className="text-xl font-semibold whitespace-nowrap">
-          Manthan's <span className="text-primary">Shop</span>
+          Manthan&apos;s <span className="text-primary">Shop</span>
         </p>
         {/* <p className="text-xs">Enjoy shopping</p> */}
       </div>
